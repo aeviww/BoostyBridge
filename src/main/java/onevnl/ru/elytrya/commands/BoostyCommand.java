@@ -175,6 +175,29 @@ public class BoostyCommand implements CommandExecutor, TabCompleter {
       }
     } else if (args.length == 3) {
       handlePlayerTab(sender, list, args, discordEnabled);
+    } else if (
+      args.length == 5 && args[1].equalsIgnoreCase("forcelink")
+    ) {
+      if (!sender.hasPermission("boosty.admin.forcelink")) return;
+
+      org.bukkit.configuration.ConfigurationSection rewards = client
+        .getPlugin()
+        .getConfig()
+        .getConfigurationSection("rewards");
+      if (rewards == null) return;
+
+      String input = args[4].toLowerCase();
+      for (String level : rewards.getKeys(false)) {
+        String suggestion = level.contains(" ")
+          ? "\"" + level + "\""
+          : level;
+        if (
+          level.toLowerCase().startsWith(input) ||
+          suggestion.toLowerCase().startsWith(input)
+        ) {
+          list.add(suggestion);
+        }
+      }
     }
   }
 
@@ -188,16 +211,32 @@ public class BoostyCommand implements CommandExecutor, TabCompleter {
     String input = args[2].toLowerCase();
 
     if (
-      sub.equals("unlink") || sub.equals("info") || sub.equals("setdiscord")
+      sub.equals("unlink") ||
+      sub.equals("info") ||
+      sub.equals("setdiscord") ||
+      sub.equals("forcelink")
     ) {
       if (sub.equals("setdiscord") && !discordEnabled) return;
       if (!sender.hasPermission("boosty.admin." + sub)) return;
+
+      java.util.Set<String> names = new java.util.LinkedHashSet<>();
+
+      if (sub.equals("forcelink")) {
+        org.bukkit.Bukkit
+          .getOnlinePlayers()
+          .forEach(online -> names.add(online.getName()));
+      }
 
       client
         .getDatabase()
         .getAllUsers()
         .stream()
         .map(BoostyUser::playerName)
+        .filter(java.util.Objects::nonNull)
+        .forEach(names::add);
+
+      names
+        .stream()
         .filter(n -> n.toLowerCase().startsWith(input))
         .forEach(list::add);
     }
