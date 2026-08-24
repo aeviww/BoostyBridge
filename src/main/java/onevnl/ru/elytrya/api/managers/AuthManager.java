@@ -20,6 +20,7 @@ public class AuthManager {
   private static final long REFRESH_THRESHOLD_MS = 21600000L;
   private static final long DEFAULT_TOKEN_LIFETIME_MS = 604800000L;
   private static final long MIN_MILLIS_TIMESTAMP = 100000000000L;
+  private static final int MAX_DECODE_ATTEMPTS = 4;
 
   private enum RefreshResult {
     SUCCESS,
@@ -81,19 +82,45 @@ public class AuthManager {
         }
       }
     } catch (Exception e) {
-      severe("Failed to parse auth_data: " + e.getClass().getSimpleName());
+      severe(
+        "Failed to parse auth_data (" +
+        e.getClass().getSimpleName() +
+        "). Copy the whole \"auth\" value from boosty.to into config.yml, it must stay in quotes."
+      );
     }
   }
 
   private String decodePayload(String raw) {
     String value = raw.trim();
-    if (value.startsWith("{")) {
-      return value;
+
+    if (
+      value.length() > 1 && value.startsWith("\"") && value.endsWith("\"")
+    ) {
+      value = value.substring(1, value.length() - 1).trim();
     }
-    return URLDecoder.decode(
-      value.replace("+", "%2B"),
-      StandardCharsets.UTF_8
-    );
+
+    for (int attempt = 0; attempt < MAX_DECODE_ATTEMPTS; attempt++) {
+      if (looksLikeJson(value)) {
+        return value;
+      }
+      if (value.indexOf('%') < 0) {
+        return value;
+      }
+      try {
+        value = URLDecoder.decode(
+          value.replace("+", "%2B"),
+          StandardCharsets.UTF_8
+        );
+      } catch (Exception ignored) {
+        return value;
+      }
+    }
+
+    return value;
+  }
+
+  private boolean looksLikeJson(String value) {
+    return value.startsWith("{") && value.endsWith("}") && value.contains("\"");
   }
 
   private String readString(JsonObject data, String primary, String fallback) {
