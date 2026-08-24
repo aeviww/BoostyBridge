@@ -23,7 +23,7 @@ public class SubscriptionSyncTask extends BukkitRunnable {
 
   @Override
   public void run() {
-    client.debug("Starting subscription sync task...");
+    log("Subscription sync started.");
 
     client
       .getAuthManager()
@@ -59,45 +59,60 @@ public class SubscriptionSyncTask extends BukkitRunnable {
 
     List<BoostyUser> users = client.getDatabase().getAllUsers();
     if (users == null || users.isEmpty()) {
-      client.debug("Sync finished: no linked players in the database.");
+      log("Subscription sync finished: no linked players in the database.");
       return;
     }
 
     Map<String, String> subscribers = snapshot.subscribers();
+    int revoked = 0;
+    int updated = 0;
+    int skipped = 0;
 
     for (BoostyUser user : users) {
       try {
-        syncUser(user, subscribers);
+        int result = syncUser(user, subscribers);
+        if (result == 1) revoked++;
+        if (result == 2) updated++;
       } catch (Exception e) {
-        client
-          .getPlugin()
-          .getLogger()
-          .warning(
-            "Skipping " +
-            user.playerName() +
-            " during sync: " +
-            e.getClass().getSimpleName()
-          );
+        skipped++;
+        warn(
+          "Skipped " +
+          user.playerName() +
+          " during sync: " +
+          e.getClass().getSimpleName()
+        );
       }
     }
 
-    client.debug(
-      "Sync finished: " +
+    log(
+      "Subscription sync finished. Checked: " +
       users.size() +
-      " links checked, " +
+      ", subscribers on Boosty: " +
       subscribers.size() +
-      " subscribers on Boosty."
+      ", rewards revoked: " +
+      revoked +
+      ", levels updated: " +
+      updated +
+      ", skipped: " +
+      skipped
     );
   }
 
-  private void syncUser(BoostyUser user, Map<String, String> subscribers) {
+  private int syncUser(BoostyUser user, Map<String, String> subscribers) {
     String currentLevel = user.levelName();
     String newLevel = subscribers.get(
       BlogManager.subscriberKey(user.boostyName())
     );
 
     if (newLevel == null) {
-      client.debug("player " + user.playerName() + " lost their subscription!");
+      log(
+        "Player " +
+        user.playerName() +
+        " (" +
+        user.boostyName() +
+        ") is no longer subscribed, taking rewards for level " +
+        currentLevel
+      );
 
       takeRewards(
         user.uuid(),
@@ -119,13 +134,13 @@ public class SubscriptionSyncTask extends BukkitRunnable {
         );
 
       client.getDatabase().removeLink(user.uuid());
-      return;
+      return 1;
     }
 
-    if (newLevel.equalsIgnoreCase(currentLevel)) return;
+    if (newLevel.equalsIgnoreCase(currentLevel)) return 0;
 
-    client.debug(
-      "player " +
+    log(
+      "Player " +
       user.playerName() +
       " changed level: " +
       currentLevel +
@@ -154,17 +169,23 @@ public class SubscriptionSyncTask extends BukkitRunnable {
       );
 
     client.getDatabase().updateLevel(user.uuid(), newLevel);
+    return 2;
   }
 
   private void skipRun(String reason) {
-    client
-      .getPlugin()
-      .getLogger()
-      .warning(
-        "Subscription sync skipped: " +
-        (reason == null ? "unknown error" : reason) +
-        ". Rewards and links are untouched."
-      );
+    warn(
+      "Subscription sync skipped: " +
+      (reason == null ? "unknown error" : reason) +
+      ". Rewards and links are untouched."
+    );
+  }
+
+  private void log(String message) {
+    client.getPlugin().getLogger().info(message);
+  }
+
+  private void warn(String message) {
+    client.getPlugin().getLogger().warning(message);
   }
 
   private void takeRewards(
