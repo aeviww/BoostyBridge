@@ -26,10 +26,12 @@ C:\Users\sorok\Music\onevnl-pl\BoostyBridge\src\main\java\onevnl\ru\elytrya\mode
 C:\Users\sorok\Music\onevnl-pl\BoostyBridge\src\main\java\onevnl\ru\elytrya\models\PendingDiscordLink.java
 C:\Users\sorok\Music\onevnl-pl\BoostyBridge\src\main\java\onevnl\ru\elytrya\models\PendingLink.java
 C:\Users\sorok\Music\onevnl-pl\BoostyBridge\src\main\java\onevnl\ru\elytrya\models\QueuedReward.java
+C:\Users\sorok\Music\onevnl-pl\BoostyBridge\src\main\java\onevnl\ru\elytrya\models\SubscriberSnapshot.java
 C:\Users\sorok\Music\onevnl-pl\BoostyBridge\src\main\java\onevnl\ru\elytrya\tasks\PendingLinkCleanupTask.java
 C:\Users\sorok\Music\onevnl-pl\BoostyBridge\src\main\java\onevnl\ru\elytrya\tasks\SubscriptionSyncTask.java
 C:\Users\sorok\Music\onevnl-pl\BoostyBridge\src\main\java\onevnl\ru\elytrya\util\BoostyNameValidator.java
 C:\Users\sorok\Music\onevnl-pl\BoostyBridge\src\main\java\onevnl\ru\elytrya\util\ClickableMessages.java
 C:\Users\sorok\Music\onevnl-pl\BoostyBridge\src\main\java\onevnl\ru\elytrya\util\DiscordNameValidator.java
 C:\Users\sorok\Music\onevnl-pl\BoostyBridge\src\main\java\onevnl\ru\elytrya\util\DiscordTextSanitizer.java
+C:\Users\sorok\Music\onevnl-pl\BoostyBridge\src\main\java\onevnl\ru\elytrya\util\RewardLevels.java
 C:\Users\sorok\Music\onevnl-pl\BoostyBridge\src\main\java\onevnl\ru\elytrya\util\TokenCipher.java

@@ -19,7 +19,7 @@ help_menu_admin:
   - "&#FFB6C1/boosty reload &8- &fперезагрузить конфигурацию"
   - "&#FFB6C1/boosty admin info <игрок> &8- &fинформация об игроке"
   - "&#FFB6C1/boosty admin unlink <игрок> &8- &fснять привязку"
-  - "&#FFB6C1/boosty admin forcelink <игрок> <ник_boosty> &8- &fпривязать вручную"
+  - "&#FFB6C1/boosty admin forcelink <игрок> \"<ник_boosty>\" [уровень] &8- &fпривязать вручную"
   - "&#FFB6C1/boosty admin setdiscord <игрок> <юзернейм> &8- &fзадать Discord"
   - "&#FFB6C1/boosty admin forcesync &8- &fзапустить синхронизацию сейчас"
 
@@ -93,17 +93,19 @@ reload_fail: "&cНе удалось перезагрузить конфигур�
 
 admin_usage_unlink: "&fИспользование: &#FFB6C1/boosty admin unlink <игрок>"
 admin_usage_info: "&fИспользование: &#FFB6C1/boosty admin info <игрок>"
-admin_usage_forcelink: "&fИспользование: &#FFB6C1/boosty admin forcelink <игрок> <ник_boosty>"
+admin_usage_forcelink: "&fИспользование: &#FFB6C1/boosty admin forcelink <игрок> \"<ник_boosty>\" [уровень]"
 admin_usage_setdiscord: "&fИспользование: &#FFB6C1/boosty admin setdiscord <игрок> <юзернейм_discord>"
 admin_resolving_player: "&fИщу игрока, подождите..."
 admin_player_not_found: "&fИгрок &#FFB6C1%player% &fне найден в базе плагина."
 admin_unlink_success: "&fПривязка игрока &#FFB6C1%player% &fудалена."
-admin_forcelink_success: "&fИгрок &#FFB6C1%player% &fпривязан к аккаунту Boosty &#FFB6C1%boosty%&f."
+admin_forcelink_success: "&fИгрок &#FFB6C1%player% &fпривязан к аккаунту Boosty &#FFB6C1%boosty% &fс уровнем &#FFB6C1%level%&f."
 admin_setdiscord_success: "&fИгроку &#FFB6C1%player% &fзадан Discord &#FFB6C1%discord_tag%&f."
 admin_forcesync_started: "&fЗапускаю принудительную синхронизацию..."
 admin_forcesync_async: "&fСинхронизация выполняется в фоне, результат появится в консоли."
 admin_notify_unlinked: "&fАдминистратор &#FFB6C1%admin% &fснял вашу привязку Boosty."
 admin_notify_forcelinked: "&fАдминистратор &#FFB6C1%admin% &fпривязал ваш аккаунт к Boosty &#FFB6C1%boosty%&f."
+
+reward_queue_delivered: "&fПока вас не было на сервере, вам начислены награды: &#FFB6C1%level%"
 
 discord:
   role-given-embed:
@@ -130,3 +132,17 @@ discord:
         value: "%mention%"
         inline: true
     footer: "elytrya | github.com/elytrya/boostybridge"
+
+# Подсказки для ручной привязки forcelink
+# Hints for the manual forcelink command
+admin_forcelink_quote_hint: "&7Если ник Boosty содержит пробелы, возьмите его в кавычки: &f/boosty admin forcelink Player \"Boosty 1\""
+admin_forcelink_unknown_level: "&cУровень &f%level% &cне найден в секции rewards: файла config.yml. Доступные уровни: &f%levels%"
+admin_forcelink_detecting: "&7Уровень не указан, определяю подписку на Boosty..."
+admin_forcelink_detect_failed: "&eНе удалось получить данные с Boosty. Укажите уровень вручную: &f/boosty admin forcelink <игрок> \"<ник>\" <уровень>"
+admin_forcelink_not_subscriber: "&eАккаунт &f%boosty% &eне найден в списке подписчиков, привязываю с уровнем &fnone&e."
+admin_forcelink_level_detected: "&7Уровень подписки определён автоматически: &f%level%"
+admin_forcelink_no_rewards: "&eДля уровня &f%level% &eнет наград в config.yml (секция rewards:), поэтому команды не выполнялись. Доступные уровни: &f%levels%"
+
+# Резервная проверка по email, если код не ушёл в личные сообщения Boosty
+# Email verification fallback used when the Boosty DM could not be sent
+link_dm_fallback_email: "&eНе удалось отправить код в Boosty, используем резервную проверку по email."

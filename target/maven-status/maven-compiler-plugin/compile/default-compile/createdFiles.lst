@@ -1,3 +1,4 @@
+onevnl\ru\elytrya\commands\subcommands\AdminSubCommand$ForceLinkArgs.class
 onevnl\ru\elytrya\models\QueuedReward.class
 onevnl\ru\elytrya\api\managers\RewardManager.class
 onevnl\ru\elytrya\commands\subcommands\DiscordSubCommand$1.class
@@ -11,11 +12,13 @@ onevnl\ru\elytrya\listeners\ChatListener.class
 onevnl\ru\elytrya\api\BoostyClient.class
 onevnl\ru\elytrya\api\managers\AuthManager.class
 onevnl\ru\elytrya\database\Database.class
+onevnl\ru\elytrya\models\SubscriberSnapshot.class
 onevnl\ru\elytrya\BoostyBridge.class
 onevnl\ru\elytrya\api\managers\DiscordBotManager$VerificationRequest.class
 onevnl\ru\elytrya\api\managers\DiscordManager.class
 onevnl\ru\elytrya\util\TokenCipher.class
 onevnl\ru\elytrya\commands\subcommands\AdminSubCommand.class
+onevnl\ru\elytrya\api\managers\AuthManager$RefreshResult.class
 onevnl\ru\elytrya\api\managers\DiscordBotManager$VerificationStatus.class
 onevnl\ru\elytrya\api\managers\BoostyDMManager.class
 onevnl\ru\elytrya\commands\subcommands\DiscordSubCommand.class
@@ -30,6 +33,7 @@ onevnl\ru\elytrya\api\managers\DiscordBotManager.class
 onevnl\ru\elytrya\models\PendingDiscordConfirm.class
 onevnl\ru\elytrya\tasks\SubscriptionSyncTask.class
 onevnl\ru\elytrya\tasks\PendingLinkCleanupTask.class
+onevnl\ru\elytrya\util\RewardLevels.class
 onevnl\ru\elytrya\api\managers\MessageManager.class
 onevnl\ru\elytrya\util\ClickableMessages.class
 onevnl\ru\elytrya\models\PendingDiscordLink.class
