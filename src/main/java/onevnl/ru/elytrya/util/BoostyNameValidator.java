@@ -10,13 +10,19 @@ public final class BoostyNameValidator {
   private static final Pattern DISALLOWED = Pattern.compile(
     "[\\p{Cntrl}\\p{Cc}\\p{Cf}\u00a7&%;|`$<>\\\\\"\\n\\r\\t]"
   );
-  private static final Pattern SPACES = Pattern.compile("\\s+");
+  private static final Pattern SPACES = Pattern.compile(
+    "[\\s\\p{Zs}\\u00a0\\u1680\\u2000-\\u200a\\u202f\\u205f\\u3000]+"
+  );
+  private static final Pattern INVISIBLE = Pattern.compile(
+    "[\\u00ad\\u180e\\u200b\\u200c\\u200d\\u2060\\ufeff]"
+  );
 
   private BoostyNameValidator() {}
 
   public static String normalize(String boostyName) {
     if (boostyName == null) return "";
-    return SPACES.matcher(boostyName.trim()).replaceAll(" ");
+    String value = INVISIBLE.matcher(boostyName).replaceAll("");
+    return SPACES.matcher(value).replaceAll(" ").trim();
   }
 
   public static boolean isValid(String boostyName) {
@@ -31,7 +37,7 @@ public final class BoostyNameValidator {
 
   public static String sanitize(String boostyName) {
     if (boostyName == null) return "";
-    String value = DISALLOWED.matcher(boostyName).replaceAll("");
+    String value = DISALLOWED.matcher(normalize(boostyName)).replaceAll("");
     value = normalize(value);
     if (value.length() > MAX_LENGTH) {
       value = value.substring(0, MAX_LENGTH).trim();

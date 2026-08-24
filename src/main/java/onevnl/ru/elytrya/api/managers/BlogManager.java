@@ -20,6 +20,7 @@ import com.google.gson.JsonObject;
 import onevnl.ru.elytrya.api.BoostyClient;
 import onevnl.ru.elytrya.models.SubscriberSnapshot;
 import onevnl.ru.elytrya.util.BoostyNameValidator;
+import onevnl.ru.elytrya.util.RewardLevels;
 
 public class BlogManager {
 
@@ -250,7 +251,8 @@ public class BlogManager {
                                 levelName = levelObj.get("name").getAsString();
                             }
                         }
-                        result.put(subscriberKey(sub.get("name").getAsString()), levelName);
+                        result.put(subscriberKey(sub.get("name").getAsString()),
+                                RewardLevels.canonical(client.getPlugin().getConfig(), levelName));
                     }
 
                     if (offset + limit > MAX_OFFSET) {

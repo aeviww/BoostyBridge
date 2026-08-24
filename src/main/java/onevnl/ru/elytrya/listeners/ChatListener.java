@@ -18,6 +18,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import onevnl.ru.elytrya.api.managers.RewardManager;
+import onevnl.ru.elytrya.util.RewardLevels;
 
 public class ChatListener implements Listener {
 
@@ -268,10 +270,11 @@ public class ChatListener implements Listener {
 
     String safeBoostyName = BoostyNameValidator.sanitize(boostyName);
 
-    List<String> commands = client
-      .getPlugin()
-      .getConfig()
-      .getStringList("rewards." + levelName + ".give");
+    List<String> commands = RewardLevels.commands(
+      client.getPlugin().getConfig(),
+      levelName,
+      RewardManager.ACTION_GIVE
+    );
 
     if (commands == null || commands.isEmpty()) {
       client.debug("No rewards found for level: " + levelName);

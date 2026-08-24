@@ -2,8 +2,6 @@ package onevnl.ru.elytrya.commands.subcommands;
 
 import com.google.gson.JsonObject;
 import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import onevnl.ru.elytrya.BoostyBridge;
@@ -16,8 +14,8 @@ import onevnl.ru.elytrya.util.BoostyNameValidator;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import onevnl.ru.elytrya.util.RewardLevels;
 
 public class AdminSubCommand implements SubCommand {
 
@@ -485,26 +483,12 @@ public class AdminSubCommand implements SubCommand {
     return "none";
   }
 
-  private Set<String> rewardLevels() {
-    ConfigurationSection section = client
-      .getPlugin()
-      .getConfig()
-      .getConfigurationSection("rewards");
-    if (section == null) return new LinkedHashSet<>();
-    return new LinkedHashSet<>(section.getKeys(false));
-  }
-
   private String matchRewardLevel(String level) {
-    if (level == null || level.isEmpty()) return null;
-    for (String key : rewardLevels()) {
-      if (key.equalsIgnoreCase(level)) return key;
-    }
-    return null;
+    return RewardLevels.match(client.getPlugin().getConfig(), level);
   }
 
   private String describeRewardLevels() {
-    Set<String> levels = rewardLevels();
-    return levels.isEmpty() ? "-" : String.join(", ", levels);
+    return RewardLevels.describe(client.getPlugin().getConfig());
   }
 
   private void handleForceSync(CommandSender sender, MessageManager msg) {

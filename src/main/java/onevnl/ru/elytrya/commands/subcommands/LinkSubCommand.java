@@ -13,6 +13,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import onevnl.ru.elytrya.api.managers.RewardManager;
+import onevnl.ru.elytrya.util.RewardLevels;
 
 public class LinkSubCommand implements SubCommand {
 
@@ -170,7 +172,10 @@ public class LinkSubCommand implements SubCommand {
     if (subData.has("level") && !subData.get("level").isJsonNull()) {
       JsonObject level = subData.getAsJsonObject("level");
       if (level.has("name") && !level.get("name").isJsonNull()) {
-        return level.get("name").getAsString();
+        return RewardLevels.canonical(
+          client.getPlugin().getConfig(),
+          level.get("name").getAsString()
+        );
       }
     }
     return "none";
@@ -389,10 +394,11 @@ public class LinkSubCommand implements SubCommand {
       .getServer()
       .getScheduler()
       .runTask(client.getPlugin(), () -> {
-        List<String> commands = client
-          .getPlugin()
-          .getConfig()
-          .getStringList("rewards." + levelName + ".give");
+        List<String> commands = RewardLevels.commands(
+          client.getPlugin().getConfig(),
+          levelName,
+          RewardManager.ACTION_GIVE
+        );
 
         if (commands == null || commands.isEmpty()) {
           client.debug("No rewards found for level: " + levelName);

@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import net.md_5.bungee.api.ChatColor;
+import onevnl.ru.elytrya.util.RewardLevels;
 
 public class MessageManager {
 
@@ -73,7 +74,7 @@ public class MessageManager {
     public void broadcastCongratulation(String playerName, String levelName) {
         if (levelName.equalsIgnoreCase("none")) return;
 
-        boolean enabled = plugin.getConfig().getBoolean("rewards." + levelName + ".congratulation", false);
+        boolean enabled = RewardLevels.congratulation(plugin.getConfig(), levelName);
         if (!enabled) return;
 
         List<String> lines = getMessageList("congratulation_message");

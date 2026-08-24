@@ -23,6 +23,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import onevnl.ru.elytrya.util.RewardLevels;
 
 public class DiscordBotManager {
 
@@ -790,14 +791,7 @@ public class DiscordBotManager {
   }
 
   private long getRoleIdForLevel(String level) {
-    FileConfiguration config = client.getPlugin().getConfig();
-    String basePath = "discord.bot.roles." + level;
-    if (!config.contains(basePath)) return 0;
-    if (config.isConfigurationSection(basePath)) {
-      ConfigurationSection section = config.getConfigurationSection(basePath);
-      return section != null ? section.getLong("role_id", 0) : 0;
-    }
-    return config.getLong(basePath, 0);
+    return RewardLevels.roleId(client.getPlugin().getConfig(), level);
   }
 
   private CompletableFuture<Member> findMember(Guild guild, String name) {

@@ -10,6 +10,7 @@ import onevnl.ru.elytrya.models.QueuedReward;
 import onevnl.ru.elytrya.util.BoostyNameValidator;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import onevnl.ru.elytrya.util.RewardLevels;
 
 public class RewardManager {
 
@@ -54,8 +55,8 @@ public class RewardManager {
     String safeBoostyName = BoostyNameValidator.sanitize(boostyName);
 
     Bukkit.getScheduler().runTask(client.getPlugin(), () -> {
-      List<String> commands = client.getPlugin().getConfig().getStringList("rewards." + levelName + "." + action);
-      if (commands == null) return;
+      List<String> commands = RewardLevels.commands(client.getPlugin().getConfig(), levelName, action);
+      if (commands.isEmpty()) return;
       for (String cmd : commands) {
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("%player%", playerName).replace("%boosty_name%", safeBoostyName));
       }
