@@ -118,18 +118,18 @@ public class AuthManager {
     client.getPlugin().saveConfig();
   }
 
-  public CompletableFuture<Void> checkAndRefreshToken() {
+  public CompletableFuture<Boolean> checkAndRefreshToken() {
     if (accessToken == null || accessToken.isEmpty()) {
       client
         .getPlugin()
         .getLogger()
         .severe("Token is missing! Please specify auth_data in config.yml!");
-      return CompletableFuture.completedFuture(null);
+      return CompletableFuture.completedFuture(false);
     }
 
     long nowMs = System.currentTimeMillis();
     if (expiresAt - nowMs > 21600000L) {
-      return CompletableFuture.completedFuture(null);
+      return CompletableFuture.completedFuture(true);
     }
 
     if (clientId == null || clientId.isEmpty() || clientId.contains("вставьте")) {
@@ -137,7 +137,7 @@ public class AuthManager {
         .getPlugin()
         .getLogger()
         .severe("Invalid Client ID! Please specify client_id in config.yml!");
-      return CompletableFuture.completedFuture(null);
+      return CompletableFuture.completedFuture(false);
     }
 
     String payload =
@@ -160,7 +160,7 @@ public class AuthManager {
       return client
         .getHttpClient()
         .sendAsync(request, HttpResponse.BodyHandlers.ofString())
-        .thenAccept(response -> {
+        .thenApply(response -> {
           if (response.statusCode() == 200) {
             JsonObject data = client
               .getGson()
@@ -169,6 +169,7 @@ public class AuthManager {
             this.refreshToken = data.get("refresh_token").getAsString();
             this.expiresAt = System.currentTimeMillis() + 604800000L;
             saveAuth();
+            return true;
           } else if (
             response.statusCode() == 401 || response.statusCode() == 403
           ) {
@@ -178,6 +179,7 @@ public class AuthManager {
               .severe(
                 "Boosty token is invalid (401/403 error)! Please update auth_data in config.yml!"
               );
+            return false;
           } else {
             client
               .getPlugin()
@@ -186,7 +188,19 @@ public class AuthManager {
                 "Failed to refresh token. Response code: " +
                 response.statusCode()
               );
+            return expiresAt - System.currentTimeMillis() > 0;
           }
+        })
+        .exceptionally(ex -> {
+          Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+          client
+            .getPlugin()
+            .getLogger()
+            .warning(
+              "Network error while refreshing the Boosty token: " +
+              cause.getClass().getSimpleName()
+            );
+          return expiresAt - System.currentTimeMillis() > 0;
         });
     } catch (IllegalArgumentException e) {
       client
@@ -196,7 +210,7 @@ public class AuthManager {
           "Invalid characters in token! Check config.yml. Error: " +
           e.getMessage()
         );
-      return CompletableFuture.completedFuture(null);
+      return CompletableFuture.completedFuture(false);
     } catch (Exception e) {
       client
         .getPlugin()
@@ -205,7 +219,7 @@ public class AuthManager {
           "Unknown error while refreshing token: " +
           e.getClass().getSimpleName()
         );
-      return CompletableFuture.completedFuture(null);
+      return CompletableFuture.completedFuture(false);
     }
   }
 
