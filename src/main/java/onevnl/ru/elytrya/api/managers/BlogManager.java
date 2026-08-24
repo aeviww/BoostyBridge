@@ -62,7 +62,7 @@ public class BlogManager {
                 .uri(URI.create("https://boosty.to"))
                 .header("Cookie", "auth=" + encodedCookie)
                 .header("Authorization", "Bearer " + auth.getAccessToken())
-                .header("User-Agent", "Mozilla/5.0")
+                .header("User-Agent", AuthManager.USER_AGENT)
                 .GET()
                 .build();
 
