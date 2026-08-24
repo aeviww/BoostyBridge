@@ -18,7 +18,6 @@ import onevnl.ru.elytrya.api.BoostyClient;
 import onevnl.ru.elytrya.models.PendingDiscordConfirm;
 import onevnl.ru.elytrya.util.ClickableMessages;
 import onevnl.ru.elytrya.util.DiscordTextSanitizer;
-import onevnl.ru.elytrya.util.TokenCipher;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -78,7 +77,7 @@ public class DiscordBotManager {
 
     this.guildId = config.getLong("discord.bot.guild_id", 0);
     this.channelId = config.getLong("discord.bot.channel_id", 0);
-    String token = resolveToken(config.getString("discord.bot.token", ""));
+    String token = config.getString("discord.bot.token", "");
 
     if (
       token == null || token.isEmpty() || token.equals("YOUR_BOT_TOKEN_HERE")
@@ -103,37 +102,6 @@ public class DiscordBotManager {
         this.enabled = false;
       }
     }
-  }
-
-  private String resolveToken(String rawToken) {
-    if (rawToken == null || rawToken.isEmpty()) return rawToken;
-
-    if (TokenCipher.isEncrypted(rawToken)) {
-      TokenCipher cipher = client.getTokenCipher();
-      if (cipher == null) {
-        client
-          .getPlugin()
-          .getLogger()
-          .severe(
-            "discord.bot.token is encrypted but secret.key is unavailable."
-          );
-        return "";
-      }
-      try {
-        return cipher.decrypt(rawToken);
-      } catch (Exception e) {
-        client
-          .getPlugin()
-          .getLogger()
-          .severe(
-            "Failed to decrypt discord.bot.token: " +
-            e.getClass().getSimpleName()
-          );
-        return "";
-      }
-    }
-
-    return rawToken;
   }
 
   public void shutdown() {

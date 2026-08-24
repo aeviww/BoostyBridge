@@ -8,7 +8,6 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import onevnl.ru.elytrya.api.BoostyClient;
-import onevnl.ru.elytrya.util.TokenCipher;
 import org.bukkit.configuration.file.FileConfiguration;
 
 public class AuthManager {
@@ -34,26 +33,18 @@ public class AuthManager {
       return;
     }
 
-    boolean wasEncrypted = TokenCipher.isEncrypted(authData);
+    if (authData.startsWith("ENC:")) {
+      client
+        .getPlugin()
+        .getLogger()
+        .severe(
+          "auth_data is still stored in the old encrypted format (ENC:...). Token encryption is removed, so paste the plain \"auth\" value from boosty.to into config.yml and delete secret.key."
+        );
+      return;
+    }
 
     try {
-      String payload = authData;
-
-      if (wasEncrypted) {
-        TokenCipher cipher = client.getTokenCipher();
-        if (cipher == null) {
-          client
-            .getPlugin()
-            .getLogger()
-            .severe(
-              "auth_data is encrypted but secret.key is unavailable. Authorization cannot be restored."
-            );
-          return;
-        }
-        payload = cipher.decrypt(authData);
-      }
-
-      String decoded = URLDecoder.decode(payload, StandardCharsets.UTF_8);
+      String decoded = URLDecoder.decode(authData, StandardCharsets.UTF_8);
       JsonObject data = client.getGson().fromJson(decoded, JsonObject.class);
 
       if (data.has("accessToken")) {
@@ -66,15 +57,6 @@ public class AuthManager {
         this.expiresAt = data.get("expiresAt").getAsLong();
       }
 
-      if (!wasEncrypted && client.getTokenCipher() != null) {
-        client
-          .getPlugin()
-          .getLogger()
-          .info(
-            "Migrating plain auth_data to encrypted storage (see secret.key in the plugin folder)."
-          );
-        saveAuth();
-      }
     } catch (Exception e) {
       client
         .getPlugin()
@@ -96,24 +78,8 @@ public class AuthManager {
       StandardCharsets.UTF_8
     );
 
-    String stored = encoded;
-    TokenCipher cipher = client.getTokenCipher();
-    if (cipher != null) {
-      try {
-        stored = cipher.encrypt(encoded);
-      } catch (Exception e) {
-        client
-          .getPlugin()
-          .getLogger()
-          .severe(
-            "Failed to encrypt auth_data, storing it unencrypted: " +
-            e.getClass().getSimpleName()
-          );
-      }
-    }
-
     FileConfiguration config = client.getPlugin().getConfig();
-    config.set("auth.auth_data", stored);
+    config.set("auth.auth_data", encoded);
     config.set("auth.client_id", this.clientId);
     client.getPlugin().saveConfig();
   }

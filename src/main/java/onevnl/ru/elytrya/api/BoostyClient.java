@@ -21,7 +21,6 @@ import onevnl.ru.elytrya.database.SQLite;
 import onevnl.ru.elytrya.models.PendingDiscordLink;
 import onevnl.ru.elytrya.models.PendingLink;
 import onevnl.ru.elytrya.tasks.PendingLinkCleanupTask;
-import onevnl.ru.elytrya.util.TokenCipher;
 
 public class BoostyClient {
     private DiscordManager discordManager;
@@ -35,7 +34,6 @@ public class BoostyClient {
     private BlogManager blogManager;
     private Database database;
     private RewardManager rewardManager;
-    private TokenCipher tokenCipher;
 
     private final Map<UUID, PendingLink> pendingLinks;
     private final Map<UUID, PendingDiscordLink> pendingDiscordLinks;
@@ -55,8 +53,6 @@ public class BoostyClient {
     }
 
     private void loadManagers() {
-        loadTokenCipher();
-
         this.messageManager = new MessageManager(plugin);
         this.authManager = new AuthManager(this);
         this.blogManager = new BlogManager(this);
@@ -86,19 +82,6 @@ public class BoostyClient {
             pendingLinkCleanupTask.cancel();
         }
         pendingLinkCleanupTask = new PendingLinkCleanupTask(this).runTaskTimerAsynchronously(plugin, 1200L, 1200L);
-    }
-
-    private void loadTokenCipher() {
-        if (this.tokenCipher != null) return;
-        try {
-            if (!plugin.getDataFolder().exists()) {
-                plugin.getDataFolder().mkdirs();
-            }
-            this.tokenCipher = new TokenCipher(plugin.getDataFolder());
-        } catch (Exception e) {
-            this.tokenCipher = null;
-            plugin.getLogger().severe("Failed to initialize token encryption: " + e.getClass().getSimpleName());
-        }
     }
 
     public void reload() {
@@ -140,10 +123,6 @@ public class BoostyClient {
 
     public Gson getGson() {
         return gson;
-    }
-
-    public TokenCipher getTokenCipher() {
-        return tokenCipher;
     }
 
     public MessageManager getMessageManager() {

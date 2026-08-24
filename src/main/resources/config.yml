@@ -21,12 +21,10 @@ auth:
   # https://ibb.co/DHTK13NQ
   # ВАЖНО: НИКОМУ НЕ ПЕРЕДАВАЙТЕ ЭТИ ДАННЫЕ!!!!
 
-  # en: On first save the plugin encrypts auth_data with AES-GCM and rewrites it
-  #     as "ENC:<base64>". The key is generated once into plugins/BoostyBridge/secret.key
-  #     A plain value is still read and migrated automatically.
-  # ru: При первом сохранении плагин шифрует auth_data (AES-GCM) и перезаписывает его
-  #     в виде "ENC:<base64>". Ключ создаётся один раз в plugins/BoostyBridge/secret.key.
-  #     Старое значение в открытом виде читается и мигрирует автоматически.
+  # en: auth_data is stored as plain text. The plugin refreshes the token itself
+  #     and never encrypts it, so secret.key is not used anymore and can be deleted.
+  # ru: auth_data хранится в открытом виде. Плагин сам обновляет токен и больше
+  #     не шифрует его, файл secret.key не используется и его можно удалить.
 
   auth_data: "{%22accessToken%22:%22YOUR_ACCESS_TOKEN%22%2C%22refreshToken%22:%22YOUR_REFRESH_TOKEN%22%2C%22expiresAt%22:1234567890000%2C%22isNewUser%22:false}" # replace!!
   client_id: "YOUR_CLIENT_ID" # replace!!
@@ -83,8 +81,8 @@ discord:
 
   bot:
     enabled: true
-    # Токен можно хранить и в зашифрованном виде: "ENC:<base64>" (тот же secret.key).
-    # The token may also be stored encrypted as "ENC:<base64>" (same secret.key).
+    # Токен бота хранится в открытом виде, шифрование не используется.
+    # The bot token is stored as plain text, no encryption is used.
     token: "token"
     guild_id: 1487451822720422088 # айди сервера
     channel_id: 1503425501719695520 # айди канала для логов выдачи ролей
