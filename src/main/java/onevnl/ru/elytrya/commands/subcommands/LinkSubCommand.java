@@ -142,7 +142,15 @@ public class LinkSubCommand implements SubCommand {
     FileConfiguration config = client.getPlugin().getConfig();
 
     if (
-      handleDMVerification(player, boostyName, levelName, userId, config, msg)
+      handleDMVerification(
+        player,
+        boostyName,
+        levelName,
+        userId,
+        subData,
+        config,
+        msg
+      )
     ) return;
     if (
       handleEmailVerification(
@@ -183,6 +191,7 @@ public class LinkSubCommand implements SubCommand {
     String boostyName,
     String levelName,
     String userId,
+    JsonObject subData,
     FileConfiguration config,
     MessageManager msg
   ) {
@@ -237,6 +246,31 @@ public class LinkSubCommand implements SubCommand {
             "DM verification code sent successfully for " + boostyName
           );
         } else {
+          client.debug(
+            "Failed to send the DM code for " +
+            boostyName +
+            ", falling back to email verification..."
+          );
+
+          if (
+            handleEmailVerification(
+              player,
+              boostyName,
+              levelName,
+              subData,
+              config,
+              msg
+            )
+          ) {
+            player.sendMessage(
+              msg.getMessage(
+                "link_dm_fallback_email",
+                "&e\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043e\u0442\u043f\u0440\u0430\u0432\u0438\u0442\u044c \u043a\u043e\u0434 \u0432 Boosty, \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u043c \u0440\u0435\u0437\u0435\u0440\u0432\u043d\u0443\u044e \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0443 \u043f\u043e email."
+              )
+            );
+            return;
+          }
+
           player.sendMessage(msg.getMessage("link_dm_error"));
         }
       });

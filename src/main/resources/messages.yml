@@ -143,3 +143,6 @@ admin_forcelink_not_subscriber: "&eАккаунт &f%boosty% &eне найден
 admin_forcelink_level_detected: "&7Уровень подписки определён автоматически: &f%level%"
 admin_forcelink_no_rewards: "&eДля уровня &f%level% &eнет наград в config.yml (секция rewards:), поэтому команды не выполнялись. Доступные уровни: &f%levels%"
 
+# Резервная проверка по email, если код не ушёл в личные сообщения Boosty
+# Email verification fallback used when the Boosty DM could not be sent
+link_dm_fallback_email: "&eНе удалось отправить код в Boosty, используем резервную проверку по email."
