@@ -4,7 +4,7 @@
   <groupId>onevnl.ru.elytrya</groupId>
   <artifactId>BoostyBridge</artifactId>
   <name>BoostyBridge</name>
-  <version>r1.1</version>
+  <version>r1.2</version>
   <url>https://elyrtya.icu</url>
   <build>
     <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
