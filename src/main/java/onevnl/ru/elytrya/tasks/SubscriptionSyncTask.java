@@ -1,7 +1,9 @@
 package onevnl.ru.elytrya.tasks;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -64,12 +66,26 @@ public class SubscriptionSyncTask extends BukkitRunnable {
     }
 
     Map<String, String> subscribers = snapshot.subscribers();
+    Set<String> claimed = new HashSet<>();
     int revoked = 0;
     int updated = 0;
     int skipped = 0;
 
     for (BoostyUser user : users) {
       try {
+        if (!claimed.add(BlogManager.subscriberKey(user.boostyName()))) {
+          skipped++;
+          warn(
+            "Skipped " +
+            user.playerName() +
+            ": Boosty account " +
+            user.boostyName() +
+            " is linked to more than one player, unlink the extra one: /boosty admin unlink " +
+            user.playerName()
+          );
+          continue;
+        }
+
         int result = syncUser(user, subscribers);
         if (result == 1) revoked++;
         if (result == 2) updated++;

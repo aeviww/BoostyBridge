@@ -14,8 +14,15 @@ public interface Database {
     String boostyName,
     String levelName
   );
+  boolean claimLink(
+    UUID uuid,
+    String playerName,
+    String boostyName,
+    String levelName
+  );
   String getBoostyName(UUID uuid);
   boolean isBoostyNameLinked(String boostyName);
+  BoostyUser getUserByBoostyName(String boostyName);
   List<BoostyUser> getAllUsers();
   void removeLink(UUID uuid);
   void updateLevel(UUID uuid, String levelName);

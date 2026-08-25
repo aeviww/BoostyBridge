@@ -342,9 +342,17 @@ public class LinkSubCommand implements SubCommand {
   ) {
     client.debug("No verification required. Linking immediately.");
 
-    client
+    boolean claimed = client
       .getDatabase()
-      .saveLink(player.getUniqueId(), player.getName(), boostyName, levelName);
+      .claimLink(player.getUniqueId(), player.getName(), boostyName, levelName);
+
+    if (!claimed) {
+      player.sendMessage(msg.getMessage("link_already_linked"));
+      client.debug(
+        "Link rejected: Boosty account is already linked to another player."
+      );
+      return;
+    }
 
     player.sendMessage(
       msg.getMessage("link_success").replace("%name%", boostyName)

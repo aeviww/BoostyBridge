@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 import onevnl.ru.elytrya.models.BoostyUser;
 import onevnl.ru.elytrya.models.QueuedReward;
+import onevnl.ru.elytrya.util.BoostyNameValidator;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public abstract class AbstractDatabase implements Database {
@@ -207,17 +208,45 @@ public abstract class AbstractDatabase implements Database {
 
   @Override
   public synchronized boolean isBoostyNameLinked(String boostyName) {
+    return getUserByBoostyName(boostyName) != null;
+  }
+
+  @Override
+  public synchronized BoostyUser getUserByBoostyName(String boostyName) {
     ensureConnection();
-    String sql = "SELECT 1 FROM boosty_links WHERE LOWER(boosty_name) = ?";
-    try (PreparedStatement statement = connection.prepareStatement(sql)) {
-      statement.setString(1, boostyName.toLowerCase());
-      try (ResultSet rs = statement.executeQuery()) {
-        return rs.next();
+    String key = BoostyNameValidator.key(boostyName);
+    if (key.isEmpty()) return null;
+
+    String sql = "SELECT * FROM boosty_links WHERE boosty_name IS NOT NULL";
+    try (
+      PreparedStatement statement = connection.prepareStatement(sql);
+      ResultSet rs = statement.executeQuery()
+    ) {
+      while (rs.next()) {
+        BoostyUser user = mapUser(rs);
+        if (BoostyNameValidator.key(user.boostyName()).equals(key)) {
+          return user;
+        }
       }
     } catch (SQLException e) {
       e.printStackTrace();
     }
-    return false;
+    return null;
+  }
+
+  @Override
+  public synchronized boolean claimLink(
+    UUID uuid,
+    String playerName,
+    String boostyName,
+    String levelName
+  ) {
+    ensureConnection();
+    BoostyUser owner = getUserByBoostyName(boostyName);
+    if (owner != null && !owner.uuid().equals(uuid)) return false;
+
+    saveLink(uuid, playerName, boostyName, levelName);
+    return true;
   }
 
   @Override

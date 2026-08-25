@@ -25,7 +25,8 @@ help_menu_admin:
 
 link_usage: "&fИспользование: &#FFB6C1/boosty link <ваш_ник_на_boosty>"
 link_invalid_name: "&fНедопустимый ник Boosty. Уберите служебные символы и попробуйте снова (до 128 символов)."
-link_already_linked: "&fЭтот аккаунт Boosty уже привязан к другому игроку."
+#одна подписка Boosty = один игрок, повторная привязка того же аккаунта блокируется
+link_already_linked: "&fЭтот аккаунт Boosty уже привязан к другому игроку. Одна подписка = один игрок."
 link_already_yours: "&fУ вас уже есть привязанный аккаунт Boosty."
 link_fetching_data: "&fПроверяю подписку на Boosty, подождите..."
 link_not_found: "&fПодписчик &#FFB6C1%name% &fне найден. Проверьте, правильно ли указан ник."
@@ -141,6 +142,8 @@ admin_forcelink_detecting: "&7Уровень не указан, определя
 admin_forcelink_detect_failed: "&eНе удалось получить данные с Boosty. Укажите уровень вручную: &f/boosty admin forcelink <игрок> \"<ник>\" <уровень>"
 admin_forcelink_not_subscriber: "&eАккаунт &f%boosty% &eне найден в списке подписчиков, привязываю с уровнем &fnone&e."
 admin_forcelink_level_detected: "&7Уровень подписки определён автоматически: &f%level%"
+#аккаунт Boosty уже занят другим игроком (%boosty% - ник Boosty, %player% - игрок-владелец)
+admin_forcelink_taken: "&cАккаунт Boosty &f%boosty% &cуже привязан к игроку &f%player%&c. Сначала отвяжите: &f/boosty admin unlink %player%"
 admin_forcelink_no_rewards: "&eДля уровня &f%level% &eнет наград в config.yml (секция rewards:), поэтому команды не выполнялись. Доступные уровни: &f%levels%"
 
 # Резервная проверка по email, если код не ушёл в личные сообщения Boosty

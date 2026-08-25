@@ -1,5 +1,6 @@
 package onevnl.ru.elytrya.util;
 
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 public final class BoostyNameValidator {
@@ -23,6 +24,10 @@ public final class BoostyNameValidator {
     if (boostyName == null) return "";
     String value = INVISIBLE.matcher(boostyName).replaceAll("");
     return SPACES.matcher(value).replaceAll(" ").trim();
+  }
+
+  public static String key(String boostyName) {
+    return normalize(boostyName).toLowerCase(Locale.ROOT);
   }
 
   public static boolean isValid(String boostyName) {

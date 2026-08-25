@@ -115,14 +115,22 @@ public class ChatListener implements Listener {
 
     BoostyBridge plugin = (BoostyBridge) client.getPlugin();
 
-    client
+    boolean claimed = client
       .getDatabase()
-      .saveLink(
+      .claimLink(
         player.getUniqueId(),
         player.getName(),
         pending.boostyName(),
         pending.levelName()
       );
+
+    if (!claimed) {
+      player.sendMessage(msg.getMessage("link_already_linked"));
+      client.debug(
+        "Link rejected: Boosty account is already linked to another player."
+      );
+      return;
+    }
 
     player.sendMessage(
       msg.getMessage("link_success").replace("%name%", pending.boostyName())

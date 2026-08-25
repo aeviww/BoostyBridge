@@ -337,6 +337,21 @@ public class AdminSubCommand implements SubCommand {
     MessageManager msg,
     boolean detected
   ) {
+    BoostyUser owner = client.getDatabase().getUserByBoostyName(boostyName);
+
+    if (owner != null && !owner.uuid().equals(target.uuid())) {
+      sender.sendMessage(
+        msg
+          .getMessage(
+            "admin_forcelink_taken",
+            "&c\u0410\u043a\u043a\u0430\u0443\u043d\u0442 Boosty &f%boosty% &c\u0443\u0436\u0435 \u043f\u0440\u0438\u0432\u044f\u0437\u0430\u043d \u043a \u0438\u0433\u0440\u043e\u043a\u0443 &f%player%&c. \u0421\u043d\u0430\u0447\u0430\u043b\u0430 \u043e\u0442\u0432\u044f\u0436\u0438\u0442\u0435: &f/boosty admin unlink %player%"
+          )
+          .replace("%boosty%", boostyName)
+          .replace("%player%", owner.playerName())
+      );
+      return;
+    }
+
     client
       .getDatabase()
       .saveLink(target.uuid(), target.name(), boostyName, level);
