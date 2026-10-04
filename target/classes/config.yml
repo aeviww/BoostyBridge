@@ -30,6 +30,9 @@ auth:
   client_id: "YOUR_CLIENT_ID" # replace!!
 # ---
 
+blog:
+  name: ""
+
 database:
   type: "SQLITE" # or MYSQL
   mysql: # if mysql
@@ -46,16 +49,10 @@ database:
     verify_server_certificate: true
 
 rewards:
-  "Спонсор +":
-    congratulation: true # - меняется в messages.yml (congratulation_message)
+  "Follower": # Follower - бесплатная подписка на бусти (выдается при нажатии кнопки "Отслеживать")
+    congratulation: true
     give:
-      - "say спонсор+"
-    take:
-      - "say забран"
-  "none":
-    congratulation: false
-    give:
-      - "say %player% просто отслеживает блог!"
+      - "give %player% minecraft:acacia_boat 1"
     take:
       - "say %player% перестал отслеживать блог!"
 
@@ -113,6 +110,7 @@ verify_email: true
 rewards_queue:
   enabled: true
   delay_ticks: 40
+  poll_interval_ticks: 200
   max_age_days: 30
 
 placeholders:

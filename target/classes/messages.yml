@@ -19,13 +19,14 @@ help_menu_admin:
   - "&#FFB6C1/boosty reload &8- &fперезагрузить конфигурацию"
   - "&#FFB6C1/boosty admin info <игрок> &8- &fинформация об игроке"
   - "&#FFB6C1/boosty admin unlink <игрок> &8- &fснять привязку"
-  - "&#FFB6C1/boosty admin forcelink <игрок> \"<ник_boosty>\" [уровень] &8- &fпривязать вручную"
+  - '&#FFB6C1/boosty admin forcelink <игрок> "<ник_boosty>" [уровень] &8- &fпривязать вручную'
   - "&#FFB6C1/boosty admin setdiscord <игрок> <юзернейм> &8- &fзадать Discord"
   - "&#FFB6C1/boosty admin forcesync &8- &fзапустить синхронизацию сейчас"
 
 link_usage: "&fИспользование: &#FFB6C1/boosty link <ваш_ник_на_boosty>"
 link_invalid_name: "&fНедопустимый ник Boosty. Уберите служебные символы и попробуйте снова (до 128 символов)."
-link_already_linked: "&fЭтот аккаунт Boosty уже привязан к другому игроку."
+#одна подписка Boosty = один игрок, повторная привязка того же аккаунта блокируется
+link_already_linked: "&fЭтот аккаунт Boosty уже привязан к другому игроку. Одна подписка = один игрок."
 link_already_yours: "&fУ вас уже есть привязанный аккаунт Boosty."
 link_fetching_data: "&fПроверяю подписку на Boosty, подождите..."
 link_not_found: "&fПодписчик &#FFB6C1%name% &fне найден. Проверьте, правильно ли указан ник."
@@ -93,7 +94,7 @@ reload_fail: "&cНе удалось перезагрузить конфигур�
 
 admin_usage_unlink: "&fИспользование: &#FFB6C1/boosty admin unlink <игрок>"
 admin_usage_info: "&fИспользование: &#FFB6C1/boosty admin info <игрок>"
-admin_usage_forcelink: "&fИспользование: &#FFB6C1/boosty admin forcelink <игрок> \"<ник_boosty>\" [уровень]"
+admin_usage_forcelink: '&fИспользование: &#FFB6C1/boosty admin forcelink <игрок> "<ник_boosty>" [уровень]'
 admin_usage_setdiscord: "&fИспользование: &#FFB6C1/boosty admin setdiscord <игрок> <юзернейм_discord>"
 admin_resolving_player: "&fИщу игрока, подождите..."
 admin_player_not_found: "&fИгрок &#FFB6C1%player% &fне найден в базе плагина."
@@ -135,14 +136,28 @@ discord:
 
 # Подсказки для ручной привязки forcelink
 # Hints for the manual forcelink command
-admin_forcelink_quote_hint: "&7Если ник Boosty содержит пробелы, возьмите его в кавычки: &f/boosty admin forcelink Player \"Boosty 1\""
+admin_forcelink_quote_hint: '&7Если ник Boosty содержит пробелы, возьмите его в кавычки: &f/boosty admin forcelink Player "Boosty 1"'
 admin_forcelink_unknown_level: "&cУровень &f%level% &cне найден в секции rewards: файла config.yml. Доступные уровни: &f%levels%"
 admin_forcelink_detecting: "&7Уровень не указан, определяю подписку на Boosty..."
-admin_forcelink_detect_failed: "&eНе удалось получить данные с Boosty. Укажите уровень вручную: &f/boosty admin forcelink <игрок> \"<ник>\" <уровень>"
+admin_forcelink_detect_failed: '&eНе удалось получить данные с Boosty. Укажите уровень вручную: &f/boosty admin forcelink <игрок> "<ник>" <уровень>'
 admin_forcelink_not_subscriber: "&eАккаунт &f%boosty% &eне найден в списке подписчиков, привязываю с уровнем &fnone&e."
 admin_forcelink_level_detected: "&7Уровень подписки определён автоматически: &f%level%"
+#аккаунт Boosty уже занят другим игроком (%boosty% - ник Boosty, %player% - игрок-владелец)
+admin_forcelink_taken: "&cАккаунт Boosty &f%boosty% &cуже привязан к игроку &f%player%&c. Сначала отвяжите: &f/boosty admin unlink %player%"
 admin_forcelink_no_rewards: "&eДля уровня &f%level% &eнет наград в config.yml (секция rewards:), поэтому команды не выполнялись. Доступные уровни: &f%levels%"
 
 # Резервная проверка по email, если код не ушёл в личные сообщения Boosty
 # Email verification fallback used when the Boosty DM could not be sent
 link_dm_fallback_email: "&eНе удалось отправить код в Boosty, используем резервную проверку по email."
+
+admin_unlink_failed: "&cНе удалось снять награды: задача занята или команда завершилась ошибкой. Привязка и очередь сохранены. Проверьте консоль и повторите команду."
+
+subscription_ended: "&cВы отписались от Boosty. Награды и роль Discord сняты, привязка удалена."
+subscription_level_changed: "&eВаш уровень Boosty изменился: %old% → %new%."
+admin_forcesync_failed: "&cСинхронизация не выполнена: %reason%"
+admin_forcesync_finished: "&aСинхронизация завершена: проверено %checked%, отписок %revoked%, изменений уровней %updated%, ошибок %failed%."
+
+subscription_ended_pending: "&eОтписка обнаружена, но снятие наград или роли Discord ещё не завершено. Администратору нужно проверить консоль; привязка сохранена для повтора."
+
+subscription_inactive: "&cПодписка Boosty неактивна. Награды сняты; привязка сохранена для автоматического восстановления."
+subscription_reactivated: "&aПодписка Boosty снова активна. Награды восстановлены или поставлены в очередь."

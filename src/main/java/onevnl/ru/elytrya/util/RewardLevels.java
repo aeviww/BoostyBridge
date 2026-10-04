@@ -33,7 +33,17 @@ public final class RewardLevels {
     for (String candidate : levels(config)) {
       if (key(candidate).equals(target)) return candidate;
     }
+    if (isFollower(level)) {
+      for (String candidate : levels(config)) {
+        if (isFollower(candidate)) return candidate;
+      }
+    }
     return null;
+  }
+
+  public static boolean isFollower(String level) {
+    String normalized = key(level);
+    return normalized.equals("none") || normalized.equals("follower");
   }
 
   public static String canonical(FileConfiguration config, String level) {
@@ -64,8 +74,18 @@ public final class RewardLevels {
     String target = key(level);
     if (roles == null || target.isEmpty()) return 0L;
 
+    String matched = null;
+    for (String candidate : roles.getKeys(false)) {
+      if (key(candidate).equals(target)) { matched = candidate; break; }
+    }
+    if (matched == null && isFollower(level)) {
+      for (String candidate : roles.getKeys(false)) {
+        if (isFollower(candidate)) { matched = candidate; break; }
+      }
+    }
+    if (matched == null) return 0L;
     for (Map.Entry<String, Object> entry : roles.getValues(false).entrySet()) {
-      if (!key(entry.getKey()).equals(target)) continue;
+      if (!entry.getKey().equals(matched)) continue;
 
       Object value = entry.getValue();
       if (value instanceof ConfigurationSection roleSection) {

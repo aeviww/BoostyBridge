@@ -5,10 +5,12 @@ import java.util.UUID;
 import onevnl.ru.elytrya.BoostyBridge;
 import onevnl.ru.elytrya.api.BoostyClient;
 import onevnl.ru.elytrya.api.managers.MessageManager;
+import onevnl.ru.elytrya.api.managers.RewardManager;
 import onevnl.ru.elytrya.models.BoostyUser;
 import onevnl.ru.elytrya.models.PendingDiscordLink;
 import onevnl.ru.elytrya.models.PendingLink;
 import onevnl.ru.elytrya.util.BoostyNameValidator;
+import onevnl.ru.elytrya.util.RewardLevels;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -18,8 +20,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import onevnl.ru.elytrya.api.managers.RewardManager;
-import onevnl.ru.elytrya.util.RewardLevels;
 
 public class ChatListener implements Listener {
 
@@ -208,15 +208,11 @@ public class ChatListener implements Listener {
     client.getDatabase().setDiscordUser(uuid, pending.discordName());
 
     BoostyUser user = client.getDatabase().getUser(uuid);
-    String levelName = (user != null) ? user.levelName() : "none";
+    String levelName = user != null ? user.levelName() : "none";
 
-    ((BoostyBridge) client.getPlugin()).getDiscordBotManager()
-      .updateUserRole(
-        uuid,
-        player.getName(),
-        pending.discordName(),
-        levelName
-      );
+    ((BoostyBridge) client.getPlugin())
+      .getDiscordBotManager()
+      .updateUserRole(uuid, player.getName(), pending.discordName(), levelName);
 
     player.sendMessage(
       msg
@@ -232,27 +228,26 @@ public class ChatListener implements Listener {
     UUID uuid = joined.getUniqueId();
 
     if (client.getRewardManager().isQueueEnabled()) {
-      Bukkit.getScheduler()
-        .runTaskLater(
-          client.getPlugin(),
-          () -> {
-            if (!joined.isOnline()) return;
-            client.getRewardManager().flush(uuid, joined.getName());
-          },
-          Math.max(1L, client.getRewardManager().getDeliveryDelayTicks())
-        );
+      Bukkit.getScheduler().runTaskLater(
+        client.getPlugin(),
+        () -> {
+          if (!joined.isOnline()) return;
+          client.getRewardManager().flush(uuid, joined.getName());
+        },
+        Math.max(1L, client.getRewardManager().getDeliveryDelayTicks())
+      );
     }
 
     if (!client.getPendingDiscordConfirms().containsKey(uuid)) return;
 
-    Bukkit.getScheduler()
-      .runTaskLater(
-        client.getPlugin(),
-        () ->
-          ((BoostyBridge) client.getPlugin()).getDiscordBotManager()
-            .sendConfirmPrompt(uuid, true),
-        40L
-      );
+    Bukkit.getScheduler().runTaskLater(
+      client.getPlugin(),
+      () ->
+        ((BoostyBridge) client.getPlugin())
+          .getDiscordBotManager()
+          .sendConfirmPrompt(uuid, true),
+      40L
+    );
   }
 
   @EventHandler

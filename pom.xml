@@ -9,10 +9,10 @@
     <groupId>onevnl.ru.elytrya</groupId>
     <artifactId>BoostyBridge</artifactId>
 
-    <version>r1.2</version>
+    <version>r1.3</version>
 
-    <name>BoostyBridge</name>
-    <url>https://elyrtya.icu</url>
+    <name>aeviww</name>
+    <url>https://aevi.lol</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -24,11 +24,13 @@
     <repositories>
         <repository>
             <id>spigot-repo</id>
-            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+            <url
+      >https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
         <repository>
             <id>placeholderapi</id>
-            <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
+            <url
+      >https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
         </repository>
         <repository>
             <id>Scarsz-Nexus</id>
@@ -109,11 +111,13 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <createDependencyReducedPom
+              >false</createDependencyReducedPom>
                             <relocations>
                                 <relocation>
                                     <pattern>org.bstats</pattern>
-                                    <shadedPattern>onevnl.ru.elytrya.bstats</shadedPattern>
+                                    <shadedPattern
+                  >onevnl.ru.elytrya.bstats</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>

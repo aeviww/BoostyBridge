@@ -36,7 +36,7 @@ public class SQLite extends AbstractDatabase {
     String levelName
   ) {
     String sql =
-      "INSERT INTO boosty_links (uuid, player_name, boosty_name, level_name) VALUES (?, ?, ?, ?) ON CONFLICT(uuid) DO UPDATE SET player_name=excluded.player_name, boosty_name=excluded.boosty_name, level_name=excluded.level_name";
+      "INSERT INTO boosty_links (uuid, player_name, boosty_name, level_name) VALUES (?, ?, ?, ?) ON CONFLICT(uuid) DO UPDATE SET player_name=excluded.player_name, boosty_name=excluded.boosty_name, level_name=excluded.level_name, subscription_status='active'";
     try (PreparedStatement statement = connection.prepareStatement(sql)) {
       statement.setString(1, uuid.toString());
       statement.setString(2, playerName);

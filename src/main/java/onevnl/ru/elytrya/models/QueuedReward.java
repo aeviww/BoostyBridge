@@ -7,7 +7,9 @@ public record QueuedReward(
   String action,
   String levelName,
   String boostyName,
-  long createdAt
+  long createdAt,
+  String id,
+  String playerName
 ) {
   public boolean isOlderThan(long millis) {
     if (millis <= 0) return false;

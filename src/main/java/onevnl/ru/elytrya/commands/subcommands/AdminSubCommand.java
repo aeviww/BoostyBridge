@@ -156,22 +156,15 @@ public class AdminSubCommand implements SubCommand {
         return;
       }
 
-      client.getDatabase().removeLink(target.uuid());
-  
-      sender.sendMessage(
-        msg
-          .getMessage("admin_unlink_success")
-          .replace("%player%", target.name())
-      );
-
-      Player online = Bukkit.getPlayer(target.uuid());
-      if (online != null) {
-        online.sendMessage(
-          msg
-            .getMessage("admin_notify_unlinked")
-            .replace("%admin%", sender.getName())
-        );
-      }
+      client.getRewardManager().unlinkWithDiscord(user).thenAccept(success -> {
+        if (!success) {
+          sender.sendMessage(msg.getMessage("admin_unlink_failed", "&cНе удалось снять награды или роль Discord. Привязка сохранена; проверьте консоль и повторите команду."));
+          return;
+        }
+        sender.sendMessage(msg.getMessage("admin_unlink_success").replace("%player%", target.name()));
+        Player online = Bukkit.getPlayer(target.uuid());
+        if (online != null) online.sendMessage(msg.getMessage("admin_notify_unlinked").replace("%admin%", sender.getName()));
+      });
     });
   }
 
@@ -510,8 +503,8 @@ public class AdminSubCommand implements SubCommand {
     sender.sendMessage(msg.getMessage("admin_forcesync_started"));
     sender.sendMessage(msg.getMessage("admin_forcesync_async"));
 
-    new SubscriptionSyncTask(client)
-      .runTaskAsynchronously(client.getPlugin());
+    SubscriptionSyncTask task = new SubscriptionSyncTask(client);
+    task.synchronize().thenAccept(result -> task.reply(sender, result));
   }
 
   private void resolveTarget(

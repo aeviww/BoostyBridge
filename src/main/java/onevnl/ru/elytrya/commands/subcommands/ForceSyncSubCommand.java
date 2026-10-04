@@ -31,7 +31,8 @@ public class ForceSyncSubCommand implements SubCommand {
         sender.sendMessage(msg.getMessage("admin_forcesync_started"));
         
 
-        new SubscriptionSyncTask(client).runTaskAsynchronously(client.getPlugin()); //rewrite!
+        SubscriptionSyncTask task = new SubscriptionSyncTask(client);
+        task.synchronize().thenAccept(result -> task.reply(sender, result));
         
         sender.sendMessage(msg.getMessage("admin_forcesync_async"));
     }

@@ -66,6 +66,15 @@ public abstract class AbstractDatabase implements Database {
       }
     } catch (SQLException ignored) {}
 
+    try (PreparedStatement probe = connection.prepareStatement("SELECT subscription_status FROM boosty_links WHERE 1 = 0")) {
+      probe.executeQuery().close();
+    } catch (SQLException missing) {
+      try (PreparedStatement alter = connection.prepareStatement("ALTER TABLE boosty_links ADD COLUMN subscription_status VARCHAR(16) NOT NULL DEFAULT 'active'")) {
+        alter.execute();
+      } catch (SQLException e) {
+        throw new IllegalStateException("Cannot migrate subscription status", e);
+      }
+    }
     createRewardQueueTable();
     createIndexes();
   }
@@ -83,34 +92,82 @@ public abstract class AbstractDatabase implements Database {
   }
 
   protected void createRewardQueueTable() {
-    String sql =
-      "CREATE TABLE IF NOT EXISTS boosty_reward_queue (uuid VARCHAR(36), action VARCHAR(16), level_name VARCHAR(255), boosty_name VARCHAR(255), created_at BIGINT)";
+    String sql = "CREATE TABLE IF NOT EXISTS boosty_reward_queue (uuid VARCHAR(36), action VARCHAR(16), level_name VARCHAR(255), boosty_name VARCHAR(255), created_at BIGINT, reward_id VARCHAR(36), player_name VARCHAR(16))";
     try (PreparedStatement statement = connection.prepareStatement(sql)) {
       statement.execute();
+      ensureQueueColumn("reward_id", "VARCHAR(36)");
+      ensureQueueColumn("player_name", "VARCHAR(16)");
+      migrateLegacyQueue();
+      try (PreparedStatement index = connection.prepareStatement("CREATE UNIQUE INDEX idx_boosty_queue_reward_id ON boosty_reward_queue (reward_id)")) {
+        index.execute();
+      } catch (SQLException ignored) {}
     } catch (SQLException e) {
-      e.printStackTrace();
+      throw new IllegalStateException("Cannot initialize reward queue", e);
+    }
+  }
+
+  private void ensureQueueColumn(String name, String type) throws SQLException {
+    try (PreparedStatement statement = connection.prepareStatement("SELECT " + name + " FROM boosty_reward_queue WHERE 1 = 0")) {
+      statement.executeQuery().close();
+      return;
+    } catch (SQLException missingColumn) {
+      try (PreparedStatement statement = connection.prepareStatement("ALTER TABLE boosty_reward_queue ADD COLUMN " + name + " " + type)) {
+        statement.executeUpdate();
+      }
+    }
+  }
+
+  private void migrateLegacyQueue() throws SQLException {
+    boolean autoCommit = connection.getAutoCommit();
+    connection.setAutoCommit(false);
+    try {
+      List<QueuedReward> legacy = new ArrayList<>();
+      try (PreparedStatement statement = connection.prepareStatement("SELECT uuid, action, level_name, boosty_name, created_at, player_name FROM boosty_reward_queue WHERE reward_id IS NULL OR reward_id = ''"); ResultSet rs = statement.executeQuery()) {
+        while (rs.next()) {
+          legacy.add(new QueuedReward(UUID.fromString(rs.getString("uuid")), rs.getString("action"), rs.getString("level_name"), rs.getString("boosty_name"), rs.getLong("created_at"), UUID.randomUUID().toString(), rs.getString("player_name")));
+        }
+      }
+      if (!legacy.isEmpty()) {
+        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM boosty_reward_queue WHERE reward_id IS NULL OR reward_id = ''")) {
+          statement.executeUpdate();
+        }
+        for (QueuedReward reward : legacy) insertQueuedReward(reward);
+      }
+      connection.commit();
+    } catch (SQLException | RuntimeException e) {
+      connection.rollback();
+      throw e;
+    } finally {
+      connection.setAutoCommit(autoCommit);
+    }
+  }
+
+  private void insertQueuedReward(QueuedReward reward) throws SQLException {
+    String sql = "INSERT INTO boosty_reward_queue (uuid, action, level_name, boosty_name, created_at, reward_id, player_name) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    try (PreparedStatement statement = connection.prepareStatement(sql)) {
+      statement.setString(1, reward.uuid().toString());
+      statement.setString(2, reward.action());
+      statement.setString(3, reward.levelName());
+      statement.setString(4, reward.boostyName());
+      statement.setLong(5, reward.createdAt());
+      statement.setString(6, reward.id());
+      statement.setString(7, reward.playerName());
+      statement.executeUpdate();
     }
   }
 
   @Override
-  public synchronized void queueReward(
-    UUID uuid,
-    String action,
-    String levelName,
-    String boostyName
-  ) {
+  public synchronized void queueReward(UUID uuid, String action, String levelName, String boostyName) {
+    queueReward(uuid, null, action, levelName, boostyName);
+  }
+
+  @Override
+  public synchronized void queueReward(UUID uuid, String playerName, String action, String levelName, String boostyName) {
     ensureConnection();
-    String sql =
-      "INSERT INTO boosty_reward_queue (uuid, action, level_name, boosty_name, created_at) VALUES (?, ?, ?, ?, ?)";
-    try (PreparedStatement statement = connection.prepareStatement(sql)) {
-      statement.setString(1, uuid.toString());
-      statement.setString(2, action);
-      statement.setString(3, levelName);
-      statement.setString(4, boostyName);
-      statement.setLong(5, System.currentTimeMillis());
-      statement.executeUpdate();
+    try {
+      insertQueuedReward(new QueuedReward(uuid, action, levelName, boostyName, System.currentTimeMillis(), UUID.randomUUID().toString(), playerName));
     } catch (SQLException e) {
-      e.printStackTrace();
+      throw new IllegalStateException("Cannot enqueue reward", e);
     }
   }
 
@@ -118,27 +175,122 @@ public abstract class AbstractDatabase implements Database {
   public synchronized List<QueuedReward> getQueuedRewards(UUID uuid) {
     ensureConnection();
     List<QueuedReward> list = new ArrayList<>();
-    String sql =
-      "SELECT action, level_name, boosty_name, created_at FROM boosty_reward_queue WHERE uuid = ? ORDER BY created_at ASC";
+    String sql = "SELECT action, level_name, boosty_name, created_at, reward_id, player_name FROM boosty_reward_queue WHERE uuid = ? ORDER BY created_at ASC, CASE WHEN action = 'take' THEN 0 ELSE 1 END ASC, reward_id ASC";
     try (PreparedStatement statement = connection.prepareStatement(sql)) {
       statement.setString(1, uuid.toString());
       try (ResultSet rs = statement.executeQuery()) {
         while (rs.next()) {
-          list.add(
-            new QueuedReward(
-              uuid,
-              rs.getString("action"),
-              rs.getString("level_name"),
-              rs.getString("boosty_name"),
-              rs.getLong("created_at")
-            )
-          );
+          list.add(new QueuedReward(uuid, rs.getString("action"), rs.getString("level_name"), rs.getString("boosty_name"), rs.getLong("created_at"), rs.getString("reward_id"), rs.getString("player_name")));
         }
       }
     } catch (SQLException e) {
-      e.printStackTrace();
+      throw new IllegalStateException("Cannot read reward queue", e);
     }
     return list;
+  }
+
+  @Override
+  public synchronized List<UUID> getQueuedRewardPlayers() {
+    ensureConnection();
+    List<UUID> players = new ArrayList<>();
+    try (PreparedStatement statement = connection.prepareStatement("SELECT DISTINCT uuid FROM boosty_reward_queue"); ResultSet rs = statement.executeQuery()) {
+      while (rs.next()) players.add(UUID.fromString(rs.getString(1)));
+    } catch (SQLException e) {
+      throw new IllegalStateException("Cannot read queued players", e);
+    }
+    return players;
+  }
+
+  @Override
+  public synchronized boolean deleteQueuedReward(String rewardId) {
+    ensureConnection();
+    try (PreparedStatement statement = connection.prepareStatement("DELETE FROM boosty_reward_queue WHERE reward_id = ?")) {
+      statement.setString(1, rewardId);
+      return statement.executeUpdate() == 1;
+    } catch (SQLException e) {
+      throw new IllegalStateException("Cannot acknowledge queued reward", e);
+    }
+  }
+
+  @Override
+  public synchronized void removeLinkAndClearRewards(UUID uuid) {
+    ensureConnection();
+    try {
+      boolean autoCommit = connection.getAutoCommit();
+      connection.setAutoCommit(false);
+      try {
+        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM boosty_reward_queue WHERE uuid = ?")) {
+          statement.setString(1, uuid.toString());
+          statement.executeUpdate();
+        }
+        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM boosty_links WHERE uuid = ?")) {
+          statement.setString(1, uuid.toString());
+          statement.executeUpdate();
+        }
+        connection.commit();
+      } catch (SQLException e) {
+        connection.rollback();
+        throw e;
+      } finally {
+        connection.setAutoCommit(autoCommit);
+      }
+    } catch (SQLException e) {
+      throw new IllegalStateException("Cannot unlink player and clear rewards", e);
+    }
+  }
+
+  @Override
+  public synchronized void deactivateAndClearRewards(UUID uuid) {
+    ensureConnection();
+    try {
+      boolean autoCommit = connection.getAutoCommit();
+      connection.setAutoCommit(false);
+      try {
+        try (PreparedStatement update = connection.prepareStatement("UPDATE boosty_links SET subscription_status = 'inactive' WHERE uuid = ?")) {
+          update.setString(1, uuid.toString());
+          if (update.executeUpdate() != 1) throw new SQLException("Linked player not found");
+        }
+        try (PreparedStatement clear = connection.prepareStatement("DELETE FROM boosty_reward_queue WHERE uuid = ?")) {
+          clear.setString(1, uuid.toString());
+          clear.executeUpdate();
+        }
+        connection.commit();
+      } catch (SQLException e) {
+        connection.rollback();
+        throw e;
+      } finally { connection.setAutoCommit(autoCommit); }
+    } catch (SQLException e) { throw new IllegalStateException("Cannot deactivate linked subscription", e); }
+  }
+
+  @Override
+  public synchronized void activateAndQueueReward(BoostyUser user, String levelName) {
+    ensureConnection();
+    try {
+      boolean autoCommit = connection.getAutoCommit();
+      connection.setAutoCommit(false);
+      try {
+        try (PreparedStatement update = connection.prepareStatement("UPDATE boosty_links SET level_name = ?, subscription_status = 'active' WHERE uuid = ? AND subscription_status = 'inactive' AND boosty_name = ?")) {
+          update.setString(1, levelName);
+          update.setString(2, user.uuid().toString());
+          update.setString(3, user.boostyName());
+          if (update.executeUpdate() != 1) throw new SQLException("Subscription already active or link changed");
+        }
+        try (PreparedStatement insert = connection.prepareStatement("INSERT INTO boosty_reward_queue (uuid, action, level_name, boosty_name, created_at, reward_id, player_name) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+          insert.setString(1, user.uuid().toString());
+          insert.setString(2, "give");
+          insert.setString(3, levelName);
+          insert.setString(4, user.boostyName());
+          insert.setLong(5, System.currentTimeMillis());
+          insert.setString(6, UUID.randomUUID().toString());
+          insert.setString(7, user.playerName());
+          insert.executeUpdate();
+        }
+        connection.commit();
+      } catch (SQLException e) {
+        connection.rollback();
+        throw e;
+      } finally { connection.setAutoCommit(autoCommit); }
+    } catch (SQLException e) { throw new IllegalStateException("Cannot reactivate subscription and queue give", e); }
   }
 
   @Override
@@ -178,7 +330,7 @@ public abstract class AbstractDatabase implements Database {
         if (rs.next()) return mapUser(rs);
       }
     } catch (SQLException e) {
-      e.printStackTrace();
+      throw new IllegalStateException("Cannot read linked player", e);
     }
     return null;
   }
@@ -260,7 +412,7 @@ public abstract class AbstractDatabase implements Database {
     ) {
       while (rs.next()) list.add(mapUser(rs));
     } catch (SQLException e) {
-      e.printStackTrace();
+      throw new IllegalStateException("Cannot update/read subscription state", e);
     }
     return list;
   }
@@ -286,14 +438,14 @@ public abstract class AbstractDatabase implements Database {
       statement.setString(2, uuid.toString());
       statement.executeUpdate();
     } catch (SQLException e) {
-      e.printStackTrace();
+      throw new IllegalStateException("Cannot update/read subscription state", e);
     }
   }
 
   @Override
   public synchronized int getActiveSubscribersCount() {
     ensureConnection();
-    String sql = "SELECT COUNT(*) FROM boosty_links WHERE level_name != 'none'";
+    String sql = "SELECT COUNT(*) FROM boosty_links WHERE subscription_status = 'active'";
     try (
       PreparedStatement statement = connection.prepareStatement(sql);
       ResultSet rs = statement.executeQuery()
@@ -315,7 +467,7 @@ public abstract class AbstractDatabase implements Database {
         if (rs.next()) return rs.getString("discord_user");
       }
     } catch (SQLException e) {
-      e.printStackTrace();
+      throw new IllegalStateException("Cannot read Discord link", e);
     }
     return null;
   }
@@ -364,7 +516,8 @@ public abstract class AbstractDatabase implements Database {
       UUID.fromString(rs.getString("uuid")),
       rs.getString("player_name"),
       rs.getString("boosty_name"),
-      rs.getString("level_name")
+      rs.getString("level_name"),
+      rs.getString("subscription_status")
     );
   }
 }

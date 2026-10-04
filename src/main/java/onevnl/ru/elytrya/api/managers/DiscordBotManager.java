@@ -498,6 +498,12 @@ public class DiscordBotManager {
     String boostyLevel
   ) {
     CompletableFuture<Boolean> future = new CompletableFuture<>();
+    String discordName = client.getDatabase().getDiscordUser(uuid);
+    if (discordName == null || discordName.isBlank()) {
+      client.debug("Discord role removal skipped for " + playerName + ": no Discord account linked.");
+      future.complete(true);
+      return future;
+    }
     if (!enabled || jda == null) {
       future.complete(false);
       return future;
@@ -515,10 +521,7 @@ public class DiscordBotManager {
       return future;
     }
 
-    String discordName = client.getDatabase().getDiscordUser(uuid);
-    String lookupName = (discordName != null && !discordName.isEmpty())
-      ? discordName
-      : playerName;
+    String lookupName = discordName.trim();
 
     findMember(guild, lookupName).thenAccept(member -> {
       if (member == null) {

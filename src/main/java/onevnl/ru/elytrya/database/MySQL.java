@@ -82,7 +82,7 @@ public class MySQL extends AbstractDatabase {
     String levelName
   ) {
     String sql =
-      "INSERT INTO boosty_links (uuid, player_name, boosty_name, level_name) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE player_name = ?, boosty_name = ?, level_name = ?";
+      "INSERT INTO boosty_links (uuid, player_name, boosty_name, level_name) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE player_name = ?, boosty_name = ?, level_name = ?, subscription_status = 'active'";
     try (PreparedStatement statement = connection.prepareStatement(sql)) {
       statement.setString(1, uuid.toString());
       statement.setString(2, playerName);

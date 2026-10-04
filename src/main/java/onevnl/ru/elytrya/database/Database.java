@@ -40,6 +40,12 @@ public interface Database {
     String levelName,
     String boostyName
   );
+  void queueReward(UUID uuid, String playerName, String action, String levelName, String boostyName);
+  List<UUID> getQueuedRewardPlayers();
+  boolean deleteQueuedReward(String rewardId);
+  void removeLinkAndClearRewards(UUID uuid);
+  void deactivateAndClearRewards(UUID uuid);
+  void activateAndQueueReward(BoostyUser user, String levelName);
   List<QueuedReward> getQueuedRewards(UUID uuid);
   void clearQueuedRewards(UUID uuid);
   int getQueuedRewardsCount();

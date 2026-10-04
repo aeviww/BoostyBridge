@@ -38,8 +38,11 @@ public class BoostyClient {
     private final Map<UUID, PendingLink> pendingLinks;
     private final Map<UUID, PendingDiscordLink> pendingDiscordLinks;
     private final Map<UUID, onevnl.ru.elytrya.models.PendingDiscordConfirm> pendingDiscordConfirms;
+    private final java.util.concurrent.atomic.AtomicBoolean syncRunning = new java.util.concurrent.atomic.AtomicBoolean();
+    public java.util.concurrent.atomic.AtomicBoolean getSyncRunning() { return syncRunning; }
     private org.bukkit.scheduler.BukkitTask syncTask;
     private org.bukkit.scheduler.BukkitTask pendingLinkCleanupTask;
+    private org.bukkit.scheduler.BukkitTask rewardQueueTask;
 
     public BoostyClient(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -53,6 +56,7 @@ public class BoostyClient {
     }
 
     private void loadManagers() {
+        if (rewardQueueTask != null) rewardQueueTask.cancel();
         this.messageManager = new MessageManager(plugin);
         this.authManager = new AuthManager(this);
         this.blogManager = new BlogManager(this);
@@ -72,11 +76,14 @@ public class BoostyClient {
         }
         this.database.connect();
 
+        long queueInterval = Math.max(20L, plugin.getConfig().getLong("rewards_queue.poll_interval_ticks", 200L));
+        rewardQueueTask = org.bukkit.Bukkit.getScheduler().runTaskTimer(plugin, () -> rewardManager.flushAll(), Math.max(1L, rewardManager.getDeliveryDelayTicks()), queueInterval);
+
         if (syncTask != null) {
             syncTask.cancel();
         }
         long interval = plugin.getConfig().getLong("sync.interval_minutes", 60) * 60 * 20L;
-        syncTask = new onevnl.ru.elytrya.tasks.SubscriptionSyncTask(this).runTaskTimerAsynchronously(plugin, interval, interval);
+        syncTask = new onevnl.ru.elytrya.tasks.SubscriptionSyncTask(this).runTaskTimerAsynchronously(plugin, 40L, Math.max(20L, interval));
 
         if (pendingLinkCleanupTask != null) {
             pendingLinkCleanupTask.cancel();
@@ -93,6 +100,7 @@ public class BoostyClient {
     }
 
     public void disable() {
+        if (rewardQueueTask != null) rewardQueueTask.cancel();
         if (syncTask != null) {
             syncTask.cancel();
         }
